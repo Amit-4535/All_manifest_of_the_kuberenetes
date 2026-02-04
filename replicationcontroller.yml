@@ -1,0 +1,55 @@
+
+
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: myrc
+
+spec:
+  replicas: 2
+  selector:
+    name: nginx_rc
+
+  template:
+    metadata:
+      labels:
+        name: nginx_rc
+
+    spec:
+      containers:
+        - name: c00
+          image: nginx
+          ports:
+            -  containerPort: 80
+
+
+
+
+The basic purpose of the Replication Controller is -- Replicas will make sure that number of pods are always running..
+
+if any pod is get deleted -- then replication will make sure that -- it will maintain the desired state = actual state. (that means defined pods are always there..)
+
+replication controller is the older  version of the replicaset -- and this controller is only supporting to the equality based selectors, not set based..
+
+note -- If you manually create a Pod with label name=nginx_rc (podname is different, but label is nginx_rc), then -- RC will take control of that Pod automatically.
+if you mentioned the replicas=2 still if the label of pod exist named nginx_rc then replication controller will create the one pod -- and this will take the control on existing pod.
+
+
+some important commands of it..
+
+-  kubectl get pods
+-  kubectl delete pod myrc-697dr  (if you delete this pod which is created from replication controller, replicaset will create the new pod, in place of deleted pod)
+-  kubectl get rc                 ( getting the replication controller information)
+-  kubectl get rc myrc
+-  kubectl get rc myrc -o wide    ( extra info of the replication controller)
+-  kubectl describe rc myrc
+-  kubectl scale rc myrc --replicas=5   (scale up the pods)
+-  kubectl scale rc myrc --replicas=2   (scale down the pods)
+-  kubectl scale --replicas=5 rc -l name=nginx_rc   (you can do scale up and down using the labels as well -- in this command the -l for label and nginx_rc is the label name)
+-  kubectl scale --replicas=2 rc -l name=nginx_rc
+- kubectl delete rc myrc    (if you delete the rc -- then the number of containers which is created -- those will be deleted.)
+
+- kubectl delete rc myrc --cascade=orphan 
+
+  this is very useful command when -- you want to keep your pods are running and delete the rc.. so this above command will delete the rc but pods are running..
+
