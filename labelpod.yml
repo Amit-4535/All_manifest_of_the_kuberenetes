@@ -1,0 +1,43 @@
+kind: Pod
+apiVersion: v1
+metadata: 
+  name: mypod
+  labels:
+    env: development
+    class: pods
+
+spec:
+  containers:
+    - name: ubuntu-container
+      image: ubuntu
+      command: ["/bin/bash", "-c", "while true; do echo hello; sleep 5; done;"]
+     
+
+
+
+
+
+
+some important commands of the label and the pods
+
+- kubectl get pods
+- kubectl get pods --show-labels
+- kubectl get pods -o wide
+- kubectl get pod mypod -o wide
+- kubectl describe pod mypod
+- kubectl get pods -l env=development
+- kubectl get pods -l env!=development
+- kubectl logs -f mypod
+- kubectl exec -it mypod -- bash
+- kubectl delete pod mypod
+- kubectl get events (getting the event which are done on terminal related to pods)
+- kubectl get pods -A   (from all the namespaces all pods will get)
+-  kubectl label pod mypod name=amit
+
+
+- kubectl label pod mypod class-  (this will removing the label which was assigned as a class)
+
+  another example
+- kubectl label pod mypod env-    (this will be removing the label which is assigned as a class)
+
+  the class and env are the key -- which is assigned at the time of assigning the labels
