@@ -1,0 +1,60 @@
+
+
+kind: ReplicaSet
+apiVersion: apps/v1
+metadata: 
+  name: myrs
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: nginx_RC
+
+  template:
+    metadata:
+      labels:
+        name: nginx_RC
+
+    spec:
+      containers:
+        - name: c00
+          image: nginx
+          ports:
+          - containerPort: 80
+
+
+            The purpose of the replicaset file is to make sure that number of pods are always running..
+            replicaset is the next version of the replication controller.
+            replication controller is only support to the equality baseed selector, whereas the replicaset is supporrting both set based and equality based selectors.
+
+            we are using the replicaset in the deployment, and we are not using the replication controller in deployment..
+
+
+Below are some importants commands of the replicaset..
+
+- kubectl get rs
+- kubectl get rs myrs
+- kubectl get rs -o wide
+- kubectl describe rs myrs
+
+
+- kubectl get pods
+- kubectl get pods --show-labels
+- kubectl get pods -l name=nginx_RC
+
+- kubectl scale rs myrs --replicas=5
+- kubectl scale rs myrs --replicas=2
+
+
+- kubectl scale rs -l name=nginx_RC --replicas=4   (through labels we can scale in and scale out)
+
+- kubectl delete pod <pod-name>
+
+- kubectl delete rs myrs --cascade=orphan         (used to keep your pod as running but the replicaset will delete)
+
+
+- kubectl describe rs myrs
+- kubectl get events                              (getting the event which is done on terminal)
+
+
