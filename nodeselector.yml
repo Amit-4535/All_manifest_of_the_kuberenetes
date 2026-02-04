@@ -1,0 +1,41 @@
+
+
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: delhipod
+
+spec: 
+  containers:
+    - name: c00
+      image: nginx
+      ports:
+      - containerPort: 80
+
+  nodeSelector:
+    hardware: t2.medium
+
+
+
+
+
+kubernetes bydefault is creating the pods on any nodes, no sequence and no priority -- k8s will create the pod on any node..
+
+but this i dont want from the kubernetes -- i want is create the pod on defined node -- so let us first we will label the node first..
+
+let us say i have multiple nodes and i want to create the pod on the node named --  my-cluster-worker2, so let us first assign the labelto the node by below command --
+- kubectl label node my-cluster-worker2 hardware=t2.medium
+  
+  now we can get the assigned label to that node by the command --
+- kubectl get nodes my-cluster-worker2 --show-labels
+
+now let us apply this above pod file -- my file name is nodeselector.yml
+-   kubectl apply -f nodeselector.yml
+  
+now when pod is creating -- this will be creating on the node -- which is labeled by you and you will get that information by the command --
+- kubectl get pods -o wide
+
+
+you can see that new pod is created on that labeled node..
+
