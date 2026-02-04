@@ -1,0 +1,140 @@
+
+
+Deployment --
+            The deployment basically we are uses for deploying the applications on kubernetes cluster.
+            The Replication controller and the Replicaset are not supporting to -- rollback, rollout and update the application, that is why we are using deployment.
+
+
+            see this below deployment which is done step by step..
+
+- i have created the Dockerfile 
+  which contains the below code 
+
+
+  FROM nginx:latest
+
+
+  COPY . /usr/share/nginx/html
+
+  CMD ["nginx", "-g", "daemon off;"]
+
+  which means -- we are using the nginx base image -- where we are copying the everything which is in the host current directory to the image/containers location.
+  and the location is -- /usr/share/nginx/html        -- which is the default location of the nginx
+
+
+- now through this file i have created the image of it by using the below command..
+  docker build -t mynginx .
+
+  now the image is created -- called mynginx
+
+- now i am created the container to see that my container is serving the web pages or not?? by using the port mapping -- so the command is 
+  docker run -d -p 8080:80 --name testnginx mynginx
+
+  (that means -d used for detached mode, -p for port mapping, 8080 is the host port and 80 is the container port, containername is testnginx and mynginx is the image name)
+
+- now i copied my instanceIP and paste in the browser followed by :8080 which is host port
+  (now i am able to see the content of the index.html which is expected..)
+- again validated that all the files are copied in the location -- /usr/share/nginx/html directory of the container or not -- files are available..
+  go to your container by the command -- docker exec -it containerID /bin/bash
+
+***** as of now this procedure is for docker deployment *****
+***** now similar deployment we need to do on kubernetes *****
+
+now for this we need tag our mynginx image and push this image to the dockerhub, as per the organization standard.
+
+first login with the Dockerhub  by the command -- docker login -u amit4535
+after this enter the password -- you will see the message is login succeded
+
+- now assign the tag to your image, use command
+  docker tag mynginx amit4535/kubernetes_deployment:v1
+
+  (tag will be assigned to your image -- amit4535/kubernetes_deployment:v1)
+
+- now push the image to the dockerhub, use the command 
+  docker push amit4535/kubernetes_deployment:v1
+
+  (now image will be available to the dockerhub now)
+
+
+***** now let us start the Deployment  *****
+
+write the below deployment.yml file, and the content of the file as below.
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mydeployment
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: nginx_deployment
+
+  template:
+    metadata:
+      labels:
+        name: nginx_deployment
+
+    spec:
+      containers:
+        - name: nginx-container
+          image: amit4535/kubernetes_deployment:v1
+          ports:
+            - containerPort: 80
+
+replicas-3 means 3 pods will running always at any cost -- matchlabel needs to match with labels inside the template-metadata-label, container - nginx-container will be creating
+image -- amit4535/kubernetes_deployment:v1 --  pulling this image from the docker hub -- and our container will run on port 80
+now deployment is done -- but for publishing our contaners data to the browser -- we need to use the service file --  so i have created this below service.yml
+
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-service
+
+spec:
+  selector:
+    name: nginx_deployment
+  type: NodePort
+
+  ports:
+    - port: 80
+      targetPort: 80
+
+
+(this means service name is nginx-service, selector- nginx_deployment is nothing but our deployment name, we used type=NodePort which is used to publish your data to browser,
+port- 80 is the deployment port and targetport 80 will be your service port)
+
+
+- now you can apply this deployment and service files, use commands
+  kubectl apply -f deployment.yml and 
+  kubectl apply -f service.yml
+
+
+- you can validate now -- are the deployment is created or not? or the service is created or not??
+
+  kubectl get deployment    (you will see that deployment is running fine with 3 pods)
+  kubectl get service       (you will see that service is also running fine with named -- nginx-service)
+
+- you can use this commands for more details --
+  kubectl get deploy mydeployment -o wide
+  kubectl describe deploy mydeployment
+
+- getting the service details and the endpoint with the below commands
+  kubectl get endpoints     -- like this -- nginx-service   10.244.1.15:80,10.244.2.17:80,10.244.2.18:80   45m   that means we are getting the pod IP's and the port allocated
+  kubectl get svc
+
+- now you can use the below command to port forward -- routing the traffic 
+   kubectl port-forward service/nginx-service 8080:80 --address 0.0.0.0
+
+   (if this above command will not work, use the sudo -E infornt of command )
+   sudo -E  kubectl port-forward service/nginx-service 8080:80 --address 0.0.0.0
+
+
+- now go to browser and enter the url as -- http://3.149.251.189:8080/ -- hostIP:80
+  (this will be showing the content which is running inside the deployment in all the pods..)
+
+
+  ****** this is how we are deploying the application in industry  ********
+-
