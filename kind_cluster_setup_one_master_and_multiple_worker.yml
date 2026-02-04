@@ -1,0 +1,51 @@
+
+
+creating cluster of single master and the multiple worker..
+requirement of your server is -- required minimum 2 CPU's and 2 GB RAM, with atleast 20 GB storage.
+
+first update and upgrade your system..
+  - sudo apt update -y
+  - sudo apt upgrade -y
+
+
+install docker start and enable it
+  - sudo apt install docker.io -y
+  - sudo systemctl enable docker
+  - sudo systemctl start docker
+  - docker –version
+  - sudo usermod -aG docker $USER
+  - newgrp docker
+
+
+install kubectl 
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - chmod +x kubectl
+  - sudo mv kubectl /usr/local/bin/
+  - kubectl version --client
+
+
+install kind
+  - curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+  - chmod +x kind
+  - sudo mv kind /usr/local/bin/kind
+  - kind --version
+
+
+create kind-config.yaml file
+
+  kind: Cluster
+  apiVersion: kind.x-k8s.io/v1alpha4
+  nodes:
+    - role: control-plane
+    - role: worker
+    - role: worker
+
+
+create the cluster 
+  - kind create cluster --name my-cluster --config kind-config.yaml
+
+command to check the available clusters
+  - kind get clusters
+
+command to get the nodes
+  - kubectl get nodes
