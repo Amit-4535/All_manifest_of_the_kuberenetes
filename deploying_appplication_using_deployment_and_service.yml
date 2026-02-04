@@ -137,4 +137,135 @@ port- 80 is the deployment port and targetport 80 will be your service port)
 
 
   ****** this is how we are deploying the application in industry  ********
--
+
+
+
+**** now let us see the rollback and rollout and update the appliation -- how we are doing this??  *******
+
+
+- now demonstrating this and understanding let us change the index.html file content, content like 
+  kubernetes deployment deployed -- v1      (this is the earlier file), now changes this as below
+  kubernetes deployment deployed on -- v2
+
+- now build the Dockerfile again as 
+  docker build -t nginxversion2 .
+   
+  (now you can see the image name is nginxversion2)
+
+- now tag to your image as
+  docker tag nginxversion2 amit4535/kubernetes_deployment:v2
+
+  (now the image will be tagged as amit4535/kubernetes_deployment:v2)
+
+- now you can push this image to the docker hub 
+   docker push amit4535/kubernetes_deployment:v2
+
+   (now the image is pushed to the docker hub)
+
+
+******* now let us change our deployment file again with the image name -- rest all setting are same *******
+
+deployment.yml file will below
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mydeployment
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: nginx_deployment
+
+  template:
+    metadata:
+      labels:
+        name: nginx_deployment
+
+    spec:
+      containers:
+        - name: nginx-container
+          image: amit4535/kubernetes_deployment:v2
+          ports:
+            - containerPort: 80
+
+
+- apply this deployment file 
+  kubectl apply -f deployment.yml
+
+- and your service.yml file apply this as well freshly
+  kubectl apply -f service.yml
+
+
+- check the deployment and service is configured or not by
+  kubectl get deploy mydeployment
+  kubectl get svc
+
+  (you will see that both are running as expected)
+
+
+****** now let us perform the rollback / rollout and the update of the application   ******
+
+- use this command to see the status of your deployment 
+  kubectl rollout status deployment/mydeployment
+
+(this will show deployment "mydeployment" successfully rolled out  -- that means our deployment is rolled out)
+
+
+- now you can see the history of the deployment
+  kubectl rollout history deployment/mydeployment
+
+  (this will show you the output as below)
+  deployment.apps/mydeployment
+REVISION  CHANGE-CAUSE
+2         v1
+3         v2
+
+(that means you will get both the deployed versions)
+
+
+- through the below command -- you will get the preious/earlier deployment details
+  kubectl rollout history deployment/mydeployment --revision=1
+
+  (you will see the output as below)
+
+  deployment.apps/mydeployment with revision #1
+Pod Template:
+  Labels:       name=nginx_deployment
+        pod-template-hash=57755df484
+  Containers:
+   nginx-container:
+    Image:      amit4535/kubernetes_deployment:v3
+    Port:       80/TCP
+    Host Port:  0/TCP
+    Environment:        <none>
+    Mounts:     <none>
+  Volumes:      <none>
+  Node-Selectors:       <none>
+  Tolerations:  <none>
+
+
+
+- you can now switch back to the previous version
+  kubectl rollout undo deployment/mydeployment
+
+  (you will be switching to the previous version, expected output as below)
+
+  deployment.apps/mydeployment rolled back
+
+- if you want to see the earlier version is running or not??
+  let us enable the port forward
+  kubectl port-forward service/nginx-service --adress 0.0.0.0
+
+  (you will see the previous deployed application)
+
+- if you want to move to the current version use the command --
+  kubectl rollout undo deployment/mydeployment --to-revision=2
+
+- if you want to move to the previous version 
+   kubectl rollout undo deployment/mydeployment --to-revision=1
+
+
+
+   ***********************8    All done from the Deployment side, Nothing is Pending ----- Perfect lab and Notes   ***************************
