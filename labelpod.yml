@@ -32,8 +32,13 @@ some important commands of the label and the pods
 - kubectl delete pod mypod
 - kubectl get events (getting the event which are done on terminal related to pods)
 - kubectl get pods -A   (from all the namespaces all pods will get)
--  kubectl label pod mypod name=amit
+- kubectl label pod mypod name=amit
+- kubectl get pods -l 'env in (development,testing)'
+- kubectl get pods -l 'app notin (development)'
+- kubectl get pods -l 'env'
+- kubectl get pods -l '!env'
 
+ 
 
 - kubectl label pod mypod class-  (this will removing the label which was assigned as a class)
 
