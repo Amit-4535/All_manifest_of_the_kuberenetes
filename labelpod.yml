@@ -38,6 +38,12 @@ some important commands of the label and the pods
 - kubectl get pods -l 'env'
 - kubectl get pods -l '!env'
 
+
+command to see the default nginx page is running inside the pod..
+- kubectl port-forward pod/mypod 8080:80 --address 0.0.0.0
+
+  (kubectl port-forward is the command, mypod is the pod name, 8080 is the server port, 80 is the container port --address 0.0.0.0 is for all the traffic)
+
  
 
 - kubectl label pod mypod class-  (this will removing the label which was assigned as a class)
