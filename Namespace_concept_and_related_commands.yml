@@ -60,6 +60,9 @@ kubectl create ns mynamespace
 deleting the namespace 
 kubectl delete ns mynamespace
 
+you can also check currently you are in which namespace, the command is
+-  kubectl config view --minify | grep namespace
+
   when we are installing the kubernetes, bydefault we are getting some system generated namespaces..
   default 
   kube-node-lease 
