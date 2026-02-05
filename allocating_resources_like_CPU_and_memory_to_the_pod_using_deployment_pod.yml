@@ -1,0 +1,62 @@
+
+
+Allocating resources like the CPU and memory to the pod 
+by using the pod file or the deployment file..
+
+
+
+when you are creating the pod -- bydefault required resources will be allocated to the pods, but i want to set some CPU and RAM at the time of pod creation..
+so we can use the below strategy.. let us allocating the resources in the file of deployment..
+
+vi deployment.yml
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mydeployment
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nginx-deployment
+
+  template:
+    metadata:
+      labels:
+        name: nginx-deployment
+
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx
+          ports:
+            - containerPort: 80
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+
+
+Here -- the resource block is useful..
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+
+that means we are allocating 100m and memory is 256Mi..
+once you apply the deployment file -- you can see the allocated resources to the pod by the command..
+
+- kubectl describe pod podname
+
+  (you will get the allocated resources..) this is how we are allocating the resources..
