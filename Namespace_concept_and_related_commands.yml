@@ -54,6 +54,12 @@ some commands related to the namespace
 - kubectl config set-context --current --namespace=mynamespace
 
 
+you can create the namespace by the command -
+kubectl create ns mynamespace
+
+deleting the namespace 
+kubectl delete ns mynamespace
+
   when we are installing the kubernetes, bydefault we are getting some system generated namespaces..
   default 
   kube-node-lease 
