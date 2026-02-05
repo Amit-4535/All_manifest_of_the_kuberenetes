@@ -1,0 +1,95 @@
+
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: mypod
+
+spec:
+  containers:
+    - name: c00
+      image: nginx
+      ports:
+        - containerPort: 80
+
+    - name: c01
+      image: httpd
+      command: ["/bin/sh","-c"]
+      args:
+        - sed -i 's/Listen 80/Listen 8080/' /usr/local/apache2/conf/httpd.conf && httpd-foreground
+      ports:
+        - containerPort: 8080
+
+
+
+
+
+In kubernetes we can connect or making the connection between 2 containers using the local host
+
+why we are making the connection??
+- Share same IP / localhost
+- Can share volumes (files)
+- Start and stop together
+- Are treated as one unit
+
+
+real use case is 
+1) Sidecar Pattern (Most Common)
+
+- One main app + one helper container.
+
+  Example
+
+Container 1 → Web Application
+
+Container 2 → Log Collector
+
+The helper “sidecar” supports the main app.
+
+Other sidecar examples:
+Monitoring agent (Prometheus exporter)
+Security proxy
+Service mesh proxy (Istio Envoy)
+Backup agent
+
+
+2) Logging
+
+Main container generates logs.
+Second container reads logs from shared volume and sends to ELK/Splunk.
+
+3) Proxy / Reverse Proxy
+
+App container runs backend
+Nginx container acts as reverse proxy / SSL termination
+
+
+4) File Sharing / Processing
+
+Container A generates files
+Container B processes or uploads them
+
+
+steps how to done this --
+
+- use this above pod file for creating the 2 containers..
+  (now 2 containers will be created called c00 and c01  - in c01 the nginx is running and on c02 the httpd is running)
+
+
+- now go to the c01 container by the command
+  kubectl exec -it mypod -c c01 -- bash
+
+  once move use the command 
+  curl http://localhost:8080
+
+ (you can see the reply as it works)   -- that means we are communincating to c01 container, similarly we can test for other container as well..
+
+
+- move to the c01 container by the command.
+  kubectl exec -it mypod -c c01 -- bash
+
+use the below command to check the connection is 
+curl http://localhost:80        -- this will give you the nginx default page -- that means we are also connecting to the container1
+
+
+**********************            this is how we are making the connection in different containers inside the single pod           ***********************
