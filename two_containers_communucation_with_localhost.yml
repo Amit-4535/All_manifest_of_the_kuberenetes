@@ -24,7 +24,8 @@ spec:
 
 
 
-In kubernetes we can connect or making the connection between 2 containers using the local host
+In kubernetes we can connect or making the connection between 2 containers using the same podIP 
+(the connection will happen due to same pod and both containers are using same IP address of the pod)
 
 why we are making the connection??
 - Share same IP / localhost
