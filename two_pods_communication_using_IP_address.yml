@@ -1,0 +1,87 @@
+
+
+2 different pod communication basically happening because 
+
+Method A — Pod IP (Internal)
+
+- Each Pod gets its own IP inside the cluster network.
+- Works inside cluster only, but not stable because Pod IP changes if Pod restarts.
+
+
+  Method B — Service (Best Practice)
+
+- Create a Service → gives:
+- Stable IP
+- DNS name
+- Load balancing
+
+  This is the correct production method.
+
+
+
+let us create the lab for this setup 
+- create 2 pods in diffrent manifest 
+
+  pod1.yml 
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: mypod1
+
+spec:
+  containers:
+  - name: c00
+    image: nginx
+    ports:
+    - containerPort: 80
+
+
+      and pod2.yml is
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod2
+
+spec:
+  containers:
+    - name: c02
+      image: httpd
+      ports:
+      - containerPort: 80
+
+
+
+apply both the file --
+kubectl apply -f pod1.yml
+kubectl apply -f pod2.yml
+
+you will see that both the pods are getting created..
+
+now switch to the first pod
+kubectl exec -it mypod1 -- /bin/bash
+
+and use the command --
+curl http://2ndpodip:80
+
+(you will get the apache's response back..)
+
+
+and do this for another pod as well..
+switch to the 2nd pod
+kubectl exec -it pod2 -- /bin/bash
+
+use the command 
+curl http://podipoffirstpod:80
+
+you will get the nginx default page
+
+
+
+if you want to see the web pages on the browser -- use the command 
+- kubectl port-forward --address 0.0.0.0 pod/mypod1 9090:80
+
+  you will see the web pages on the browser..
+
+************************************ this is how we are making the connection of two different pods ****************
