@@ -1,0 +1,46 @@
+
+
+The resource quotta concept are used to set the hard limit of the pods.
+set the limit to resources like the CPU limit
+set the limit to resource like the memory..
+
+
+This setting basically are used to the namespace..
+
+it means setting Hard Set = Namespace ResourceQuota.
+
+
+It controls total resources allowed inside a namespace, not just one pod.
+
+
+now use this manifest file -- 
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: my-quota
+  namespace: mynamespace
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "2"
+    requests.memory: 2Gi
+    limits.cpu: "4"
+    limits.memory: 4Gi
+
+
+
+  Meaning of Hard Values
+
+Field           	  Meaning
+pods: 10	        Max 10 pods allowed in this namespace
+requests.cpu: 2	        Total guaranteed CPU across all pods = 2 cores
+requests.memory: 2Gi	Total guaranteed memory = 2GB
+limits.cpu: 4	        Max CPU usage in namespace = 4 cores
+limits.memory: 4Gi	Max memory usage = 4GB
+
+
+If quota CPU hard limit is 2 and you try to deploy pods needing 3 CPU → Deployment will fail.
+
+
+“Hard set in Kubernetes is implemented using ResourceQuota, which enforces maximum resource usage limits at the namespace level.”

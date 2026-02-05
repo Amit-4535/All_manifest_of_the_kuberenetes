@@ -60,3 +60,4 @@ once you apply the deployment file -- you can see the allocated resources to the
 - kubectl describe pod podname
 
   (you will get the allocated resources..) this is how we are allocating the resources..
+
