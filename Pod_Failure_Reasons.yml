@@ -1,0 +1,84 @@
+
+
+We have different reasons -- for pod is failing from creating..
+
+
+Pod failure means container is not starting, crashing, or stuck.
+
+1) image issue
+
+- Wrong image name
+- Image tag not found
+- Private registry without secret
+
+you will get the failed reason of the pod is
+- ErrImagePull
+- ImagePullBackOff
+
+2) Resource Issues
+
+- Not enough CPU
+- Not enough Memory
+- Node full
+- ResourceQuota exceeded
+
+you will get the pod status as
+- Pending
+- FailedScheduling
+
+
+3) Node / Scheduling Issues
+
+- NodeSelector mismatch
+- Taints without tolerations
+- Node NotReady
+- No nodes available
+
+
+4) Application Crash
+
+- Wrong command/entrypoint
+- App exits immediately
+- Missing environment variables
+- Port conflicts
+
+you will see the status of the pod as
+
+- CrashLoopBackOff
+- Error
+
+
+5) Volume / Storage Issues
+
+- PVC not bound
+- StorageClass missing
+- Volume mount path wrong
+
+
+6) Probe Failures
+
+- Liveness probe failing
+- Readiness probe failing
+
+  issue is Pod will restarts repeatedly.
+
+
+
+7) Security / Permission Issues
+
+- RBAC denies access
+- ServiceAccount missing
+- SecurityContext restrictions
+
+8) Config / YAML Errors (Pod Level)
+
+- Wrong container name
+- Wrong field indentation
+- Invalid field values
+
+
+
+Note --
+
+Pod fails → Runtime problem
+Deployment fails → Management / Configuration problem

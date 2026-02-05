@@ -1,0 +1,54 @@
+
+
+we have below reasons of deployment failed
+
+
+1) Selector and Label Mismatch
+
+if the selector and label mismatch -- the result will be not pod will be created
+
+
+2) ReplicaSet Conflicts
+
+- Old ReplicaSet exists
+- Name conflicts
+- Immutable field changes
+
+
+3) Rolling Update Stuck
+
+- Pods not becoming Ready
+- Readiness probe failing
+- maxUnavailable too strict
+
+
+4) Invalid Strategy Configuration
+
+- Wrong update strategy fields
+- Incorrect values
+
+
+5) Resource Quotas at Namespace Level
+
+- example -- Deployment tries to create 5 pods, quota allows only 2.
+
+
+6) Pod Template Errors
+
+- Deployment YAML valid, but Pod template inside it is wrong.
+
+  Examples:
+
+- Wrong image
+- Invalid volume
+- Bad command
+
+
+7) RBAC / Permission Issues
+
+- Deployment controller cannot create pods.
+
+
+8) API Version / Kind Errors
+
+- apiVersion: apps/v2  # wrong
