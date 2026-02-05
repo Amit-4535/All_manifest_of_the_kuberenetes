@@ -44,3 +44,40 @@ If quota CPU hard limit is 2 and you try to deploy pods needing 3 CPU → Deploy
 
 
 “Hard set in Kubernetes is implemented using ResourceQuota, which enforces maximum resource usage limits at the namespace level.”
+
+
+once you apply this file using -- kubectl apply -f resourcequotta.yml
+
+kubectl describe quota -n mynamespace
+
+this will be showing you the below output..
+
+Name:            my-quota
+Namespace:       mynamespace
+Resource         Used   Hard
+--------         ----   ----
+limits.cpu       200m   4
+limits.memory    256Mi  4Gi
+pods             2      10
+requests.cpu     100m   2
+requests.memory  100Mi  2Gi
+
+
+this means -- limit we have 2 cores cpu -- and currently used 100m
+memory -- used is 100 Mi and we have available 2Gi for this namespace
+pods -- 2 pods are now currently running -- and we can create total 10 pods -- more 8 pods can be created..
+
+
+we can also get the detail by the below command as well..
+
+kubectl get quota -n mynamespace
+NAME       REQUEST                                                        LIMIT                                          AGE
+my-quota   pods: 2/10, requests.cpu: 100m/2, requests.memory: 100Mi/2Gi   limits.cpu: 200m/4, limits.memory: 256Mi/4Gi   6m49s
+
+
+Note ---  if you trying to create the more than set limit -- the pods and the deployment will be failed...
+
+
+
+*************************     this is how we are using the resource quotta        ***************************
+
