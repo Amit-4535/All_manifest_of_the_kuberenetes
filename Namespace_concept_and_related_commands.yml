@@ -63,6 +63,25 @@ kubectl delete ns mynamespace
 you can also check currently you are in which namespace, the command is
 -  kubectl config view --minify | grep namespace
 
+
+- you can create the pod in required namespace, see below file
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: mumbai-pod
+  namespace: mynamespace
+
+spec:
+  containers:
+  - name: mumbai-container
+    image: nginx
+    ports:
+    - containerPort: 80
+
+if you are in the default namespace and you want to check the pod lists in the mynamespace, then command should be
+kubectl get pods -n mynamespace
+
   when we are installing the kubernetes, bydefault we are getting some system generated namespaces..
   default 
   kube-node-lease 
