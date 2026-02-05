@@ -1,0 +1,84 @@
+
+
+Through this below content of file -- we can check that how many resources like cpu and RAM is aquired by the nodes or the pods..
+
+
+for checking how many resources is allocated to nodes and pods we can use the below command..
+- kubectl top node
+- kubectl top pod
+
+
+(we can get the details if we have metrics API server is available)
+
+if we are getting the error like -- error: Metrics API not available
+
+then we need to use the below steps..
+
+Install Metrics Server
+- run this command 
+  kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+
+Verify Installation
+- kubectl get pods -n kube-system
+
+you should see --  metrics-server-xxxxx   Running
+
+
+if you see -- metrics-server-b4c746d8b-cjfv7 0/1 Running 0 52s  -- that means our pod metrics-server-b4c746d8b-cjfv7 is not properly running yet, so we need to modify below file..
+
+
+now -- Edit Metrics Server Deployment by the below command.
+
+kubectl edit deployment metrics-server -n kube-system
+
+
+Find containers -> args
+You will see something like:
+
+containers:
+- args:
+  - --cert-dir=/tmp
+  - --secure-port=4443
+
+
+Add these two lines below args:
+
+- --kubelet-insecure-tls
+- --kubelet-preferred-address-types=InternalIP
+
+you should see something like this after update of the deployment file..
+
+args:
+- --cert-dir=/tmp
+- --secure-port=4443
+- --kubelet-insecure-tls
+- --kubelet-preferred-address-types=InternalIP
+
+  save and exit
+
+now check that pod is running or not? use the command
+- kubectl get pods -n kube-system
+
+  (you can see the status of the pod now -- this pod will be running.)
+
+
+now the final validation
+
+use the command
+kubectl get pod
+kubectl get node
+
+
+now you will get the details of the pod and the node
+you should see the expected output as
+
+NAME         CPU(cores)   MEMORY(bytes)
+mumbai-pod   0m           3Mi
+root@ip-172-31-1-130:/home/ubuntu/All_manifest_of_the_kuberenetes# kubectl top node
+NAME                       CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)
+my-cluster-control-plane   112m         5%       645Mi           33%
+my-cluster-worker          14m          0%       151Mi           7%
+my-cluster-worker2         20m          1%       212Mi           11%
+
+
