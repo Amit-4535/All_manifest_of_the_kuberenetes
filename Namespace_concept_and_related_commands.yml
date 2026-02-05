@@ -1,0 +1,104 @@
+
+
+Namespace
+
+The basically idea behind creating the namespace is --
+- It is the logical partition that we are creating inside our cluster..
+  (A Namespace in Kubernetes is like a virtual cluster inside a cluster.)
+
+Reason -
+        In industry we have a different teams -- 
+        dev namespace → Development apps
+        test namespace → Testing apps
+        prod namespace → Production apps
+
+        so we are creating the separate cluster inside the kuberenetes cluster called namespace -- so everyone can work on the separate namespace.
+        likewise we are creating the namespace for each and every team -- so they will not interact with each other -- and they can work in their namespace only..
+
+
+
+      we can say namespace as the -- logical partition of the cluster / isolation of the cluster / creating platform for multiple teams..
+
+
+      Isolation Between Teams / Projects
+      - Different teams may use the same Kubernetes cluster.
+
+Namespace ensures:
+- One team cannot accidentally modify another team’s resources
+- Better security and separation
+
+
+
+  example --
+  Team A → team-a namespace
+  Team B → team-b namespace
+
+
+manifest file to create the namespace
+
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: mynamespace
+
+
+  apply this file --
+  kubectl apply -f namespace.yml
+
+some commands related to the namespace
+- kubectl get namespaces
+- kubecctl get ns namespacename -o wide
+- kubectl describe namespace namespacename
+
+  command to set the current namespace as the default namespace.
+- kubectl config set-context --current --namespace=mynamespace
+
+
+  when we are installing the kubernetes, bydefault we are getting some system generated namespaces..
+  default 
+  kube-node-lease 
+  kube-public 
+  kube-system 
+  local-path-storage
+
+  these are the 5 namespaces are creating when you are installing the kubernetes..
+  
+  1) default
+  Used when you do not specify any namespace while creating resources.
+
+  2) kube-system
+  Contains Kubernetes core components.
+
+it  Includes:
+
+kube-dns / CoreDNS
+kube-proxy
+scheduler
+controller-manager
+etcd
+networking components
+
+3) kube-public
+
+Purpose:
+
+Publicly readable data.
+Rarely used by regular users.
+Mainly for cluster info sharing.
+
+4) kube-node-lease
+
+Purpose:
+
+Stores node heartbeat information.
+Helps Kubernetes know whether a node is alive or not.
+Improves cluster performance and scalability.
+
+5) local-path-storage
+
+Purpose:
+
+Created by local storage provisioners (common in KIND, Minikube, K3s).
+Used for Persistent Volumes (PV) and Storage Classes.
+Handles local disk storage for pods.
+
