@@ -1,0 +1,103 @@
+
+
+Node Affinity --
+                The node affinity is the next version of the node selector term -- here we can decide on which node the pod should be created.
+                there are 2 types of node affinity we have
+                - required and
+                - preffered
+
+                1) required 
+
+                - Meaning
+
+Strict / Hard rule
+
+Pod MUST match the condition.
+
+If no node matches → Pod stays Pending.
+
+2) preffered -
+
+Meaning
+
+Soft / Best-effort rule
+
+Scheduler tries to match.
+
+If not possible → pod still runs on another node.
+
+
+
+Before using the affinity concept -- we need to provide or assign the label to the node -- on which we are creating the pod..
+
+so use the command -
+- kubectl label node my-cluster-worker2 server=myserver
+
+  meaning -- for my-cluster-worker2 this node assigning the key is -- server and the value of that server is myserver..
+
+
+now write your affinity file as below..
+
+vi pod.yml
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: delhi-pod
+  labels:
+    env: development
+    class: pods
+
+spec:
+  containers:
+    - name: delhi-container
+      image: nginx
+      ports:
+        - containerPort: 80
+
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+
+            - key: "server"
+              values:
+                - myserver
+              operator: "In"
+
+
+
+in this file -- we are writting the pod yaml code as usual, but in the last section we are using the affinity standard..
+
+affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+
+            - key: "server"
+              values:
+                - myserver
+              operator: "In"
+
+
+here affinity -- we are using a nodeAffinity..
+requiredDuringSchedulingIgnoredDuringExecution is the affinity type
+using nodeSelectorTerms -- stating that this should be the terms of the node 
+matching the expression using this below options.
+            - key: "server"
+              values:
+                - myserver
+              operator: "In"
+
+                here key is the we have set to our node is -- server
+                the values of that key is -- myserver () -- here we are using the values for multiple options not value and the -- and the value is myserver which we are mentioning to the
+                below line..
+                and operator we have used as In
+
+
+  once this code will applied -- you can see that the pod should be created on required server -- my-cluster-worker2
+
+
+*********************************                          This is how Affinity will work                   *************************************************************

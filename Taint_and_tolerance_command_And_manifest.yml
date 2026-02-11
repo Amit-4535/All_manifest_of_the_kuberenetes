@@ -1,0 +1,94 @@
+
+
+The Taint means -- 
+                  - The concept is like when we are creating the pod then K8S will create the pod on available node, not sequence or particular node, but through the taint and 
+                   toleration we can tell k8s to create on not create the pod on that node..
+
+                  If you mark any node as Tainted node then you can not schedule the pod on that node..
+                  if you untaint the tainted node by command -- you are be able create the pod on that node.
+
+                  Tolearion means -- the node is already tainted, still i want to schedule the pod on that node -- then through toleration we can do that..
+
+
+                The command to taint the node is 
+               - kubectl taint node nodename key=value:effect
+                 example
+               - kubctl taint node node1 prod=true:NoSchedule
+
+                 where key is prod  (this is your label name)
+                 value is true    (this is your label value)
+                 and effect is NoSchedule (effect → NoSchedule | PreferNoSchedule | NoExecute)
+
+
+                 The command to untaint the node is -
+               - kubectl taint node nodename key=value:effect-
+                 example 
+               - kubctl taint node node1 prod=true:NoSchedule-
+
+                 (we are using the (-) at the last of the command to untaint the tainted node)
+
+Now let us say you have tainted the node by the command -
+kubectl taint node my-cluster-worker prod=true:NoSchedule
+
+you need to assign the label to the node as well by the command -
+- kubectl label nodes my-cluster-worker type=prod
+
+
+and used the below file to create the pod 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testpod
+spec:
+  nodeSelector:
+    type: prod
+  containers:
+  - name: nginx
+    image: nginx
+
+
+now apply this file by command -
+kubectl apply -f pod.yml
+
+now you can see that pod is showing in the pending state cause the node is tainted - you can see the full detail of your pod by command-
+kubectl describe pod podid
+
+now you want to make this pod as running then you need to untaint the node by the command -
+- kubectl taint node  my-cluster-worker prod=true:NoSchedule-
+
+
+  now you can see your pod will be in running state..
+
+
+let us use the toleration in the file of pod, so your pod file shoud be this-
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: mumbai-pod
+  labels:
+    env: dev
+    class: pods
+
+spec:
+  containers:
+    - name: c00
+      image: nginx
+      ports:
+        - containerPort: 80
+
+  nodeSelector:
+    type: prod
+
+  tolerations:
+    - key: "prod"
+      value: "true"
+      effect: "NoSchedule"
+      operator: "Equal"
+
+
+  now when you apply this file -- the status is the pod will be running state and it will be on the tainted node called my-cluster-worker, your pod will be running...
+
+  the node is already tainted, still you are creating the pod on that node by using the toleration concept..
+
+  this is how we are using the toleraion in the kubernetes
