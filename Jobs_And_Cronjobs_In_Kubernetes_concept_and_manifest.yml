@@ -1,0 +1,179 @@
+
+
+Jobs --
+      A Job is used when you want a task to run once (or limited times) and then stop.
+      It is not for running applications continuously like Deployment.
+
+why we are using the jobs.
+- Real-Time / Industry Use Cases
+  Database Migration
+- When a new version of an app is deployed, a script runs to:
+  -Add new tables
+-Modify columns
+-Update schema
+
+After completion → Job ends
+
+Backup Tasks
+-Take DB backup at night
+-Upload to S3 / Storage
+
+Data Processing / ETL
+- Read logs
+- Convert CSV to JSON
+- Generate analytics reports
+
+
+How the job will works?
+
+- Kubernetes creates a Pod
+- Pod runs the command
+- Task finishes
+- Pod status → Completed
+- No new pod is created (unless failure)
+
+  If Pod fails, Kubernetes retries based on settings.
+
+
+
+Important Concept --
+
+- We do NOT backup Pod, we are actually taking the backup of the  DATA.
+  cause -- Pod = temporary and Volume (PVC) = permanent
+
+  So first we must store app data in Persistent Volume (PVC).
+
+create one pv.yml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mypv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/app
+
+apply this file -- kubectl apply -f pv.yml
+
+      Create Persistent Volume Claim (PVC)
+      pvc.yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mypvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+
+
+apply this file as -- kubectl apply -f pvc.yml
+
+
+Attach PVC to Your Application Pod
+create mypod.yml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+  - name: app
+    image: nginx
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: appdata
+
+  volumes:
+  - name: appdata
+    persistentVolumeClaim:
+      claimName: mypvc
+
+kubectl apply -f mypod.yml
+
+
+now create the job.yml file to creating the backup for the data..
+job.yml
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: backup-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: backup
+        image: busybox
+        command: ["sh", "-c", "tar -czf /backup/app.tar.gz /data"]
+        volumeMounts:
+        - name: appdata
+          mountPath: /data
+        - name: backup
+          mountPath: /backup
+
+      restartPolicy: OnFailure
+
+      volumes:
+      - name: appdata
+        persistentVolumeClaim:
+          claimName: mypvc
+      - name: backup
+        hostPath:
+          path: /backup
+
+
+kubectl apply -f job.yml
+
+This creates /backup/app.tar.gz on the node/container.
+
+
+the above job and the tasks is for one time usage only, but let us say - i want to take the backup every day then i can use the below cronjob
+
+so we can use the cronjob here -- for scheduling the backup on daily or required time..
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-backup
+spec:
+  schedule: "0 2 * * *"   # 2 AM daily
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: busybox
+            command:
+              - sh
+              - -c
+              - tar -czf /backup/app.tar.gz /data
+            volumeMounts:
+            - name: appdata
+              mountPath: /data
+            - name: backup
+              mountPath: /backup
+
+          restartPolicy: OnFailure
+
+          volumes:
+          - name: appdata
+            persistentVolumeClaim:
+              claimName: mypvc
+          - name: backup
+            hostPath:
+              path: /backup
+
+
+  Above this cronjob will create the backup every day at 2 am
+
+
+***************************    this is how we are using the jobs and the cronjobs in the Kubernetes             ************************************************
