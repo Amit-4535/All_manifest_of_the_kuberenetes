@@ -1,0 +1,49 @@
+Daemonset -
+        - The Daemonset will make sure that atleast one pod should be running on every worker nodes..
+          The main purpose of the daemonset is to create the atleast one pod running on each and every worker node..
+
+
+          let us create the daemonset file as below --
+
+          vi daemonset.yml
+
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: mydaemonset
+
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+
+  template:
+    metadata:
+      labels:
+        app: nginx
+
+    spec:
+      containers:
+        - name: c00
+          image: nginx
+          ports:
+            - containerPort: 80
+
+
+
+  Apply this file as -- kubectl apply -f daemonset.yml
+
+  (now you can see on every worker node the pod is running..)
+
+  you can check the status of the pod and running on which node by command --
+  - kubectl get pods -o wide
+
+
+  Note -- let us say you have deleted the pod on any node which is created by the daemonset -- then daemonset is the controller who can again 
+          recreate the other pod in place of existing pod..
+
+
+Note -- the daemonset will create the pods on the woker nodes, not on the control plane..
+cause -- Control plane nodes usually have a taint applied automatically, something like:
+  node-role.kubernetes.io/control-plane:NoSchedule
+
