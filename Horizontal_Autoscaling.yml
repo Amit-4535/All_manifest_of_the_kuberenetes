@@ -1,0 +1,141 @@
+
+
+kubernets Horizontal Autoscaling.
+
+
+The kubernetes is mainly known for the autoscaling, load balancing and for the foult tolerance.
+
+kubernetes are supporting to both the autoscaling (horizontal and vertical autoscaling..)
+
+
+Horizontal auto scaling means -- we are scale in or scale out the number of pods, depending on the metrics we can set on the deployment..
+example:
+  let us say i have one pod is running in deployment, and it is handling the traffic of 100 requests, but what if i will get the 200 or 300 request at the time.
+  my existing pod will not handle these many requests, the pod will be failed or crashed, so overcome this challeng i can use the autoscaling here, and setting
+  the metrix here, like if CPU utilization is reached to 50% or more than that, then i want to scale/create more pods, and if the utilization will come down then 
+  pods count will be decreased, this is what autoscaling is..
+
+
+HPA automatically scales the number of pod replicas based on observed CPU/memory utilization or custom metrics.
+
+For scaling we required matrix needs to be installed on kube-system namespace.. on our cluster.. 
+
+Install Metrics Server:
+  kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+  For Kind, edit:
+    kubectl edit deployment metrics-server -n kube-system
+
+  Make sure these exist:
+    - --kubelet-insecure-tls
+    - --kubelet-preferred-address-types=InternalIP
+
+
+verify by the command:
+  kubectl top nodes
+  kubectl top pods
+
+
+create Create Deployment:
+  deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache-deployment
+  namespace: apache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apache
+  template:
+    metadata:
+      labels:
+        app: apache
+    spec:
+      containers:
+      - name: apache
+        image: httpd:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+          limits:
+            cpu: 200m
+
+
+kubectl create namespace apache
+kubectl apply -f deployment.yaml
+
+
+Create service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: apache-service
+  namespace: apache
+spec:
+  selector:
+    app: apache
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+
+
+kubectl apply -f service.yaml
+
+
+kubectl get pods -n apache
+
+
+Create hpa.yaml
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: apache-hpa
+  namespace: apache
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: apache-deployment
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+
+
+kubectl apply -f hpa.yaml
+check: kubectl get hpa -n apache
+
+Run temporary busybox: to increase the load
+
+  kubectl run -it busybox --image=busybox -n apache -- sh
+
+  Inside busybox:
+
+    while true; do wget -q -O- http://apache-service; done
+
+    This generates CPU load.
+
+
+Watch Scaling
+kubectl get hpa -n apache -w
+kubectl get pods -n apache -w
+You’ll see: 1 → 2 → 3 → 4 → 5
+
+
+When CPU > 50% → scales up
+When CPU drops → scales down
+
+
