@@ -1,0 +1,84 @@
+
+
+Vertical Pod Autoscaling..
+
+
+What is VPA?
+VPA automatically adjusts CPU and memory requests/limits of containers within a pod, based on usage.
+It’s helpful for memory-intensive apps or apps that don’t benefit from multiple replicas.
+
+
+
+For HPA clone the official repository for packages on your cluster..
+Git clone https://github.com/kubernetes/autoscaler.git
+
+
+Now through this we have a autoscaler code available.. now you can see autoscaler code is available on your directory..
+
+Go to autoscaler  and vertical-pod-auto-scaler  run the script  ./hack/vpa-up.sh (run this script)
+
+
+	Now create the manifest for VPA..
+Vi vpa.yml
+
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: apache-vpa
+  namespace: apache
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: apache-deployment
+  updatePolicy:
+    updateMode: "Auto"
+
+      save this file.. and apply the changes by  kubectl apply -f vpa.yml
+
+now run the command  kubectl get vpa -n apache  this will show you the VPA details..  it will show the value like  name/mode/cpu/memory
+
+
+now create and generate the load on your pod.. for autoscaling purpose use the command 
+kubectl run -it - -tty load-generator - -image=busybox -n apache /bin/sh
+
+
+once this pod terminal will open run the below command..
+while true; do wget -q -o https://apache-service.apache.svc.cluster.local; done    
+ use this DNS for running while loop continuously so load will be increasing on the pod and cluster..
+
+
+now run the command  watch kubectl get vpa -n apache     you can see here memory is increasing cause in the earlier command we have increased the load.. and due to that load memory is increasing…
+
+you can see the memory detail and also disk details of the pod by command 
+kubectl top pod -n apache          this will show you the cpu and memory information..
+
+
+fire command  kubectl get vpa -n apache      and check that existing cpu and memory is increased now due to the VPA autoscaling..
+
+kubectl top node 	 through this command we can see that how much resources like memory and hard disk our node  is using… (here we can see all used resources of nodes…)
+
+
+
+expected output --
+
+ Recommendation:
+    Container Recommendations:
+      Container Name:  apache
+      Lower Bound:
+        Cpu:     32m
+        Memory:  250Mi
+      Target:
+        Cpu:     35m
+        Memory:  250Mi
+      Uncapped Target:
+        Cpu:     35m
+        Memory:  250Mi
+      Upper Bound:
+        Cpu:     1614m
+        Memory:  1087219816
+
+
+          this value is increasing as per the load..
+
+
