@@ -1,0 +1,235 @@
+
+
+Probes
+
+    	A key concept to ensure the health and availability of your applications.
+
+What is a Probe in Kubernetes?
+A probe is a way for Kubelet to check the health of a container in a pod. Based on the probe result.
+
+Kubernetes can:
+•	Restart a container
+•	Remove it from service (not send traffic)
+•	Wait before starting the container
+
+
+There are three types of probes:
+Type	        Purpose
+livenessProbe	Checks if the app is alive. If it fails, the container is restarted.
+readinessProbe	Checks if the app is ready to serve traffic. If it fails, it's removed from Service endpoints.
+startupProbe	Checks if the app has started successfully (used when app takes a long time to boot).
+
+
+Common Probe Configuration Methods
+Type	        Description
+httpGet	        Probe hits a HTTP endpoint
+exec	        Runs a command inside the container
+tcpSocket	Tries to open a TCP connection on a port
+
+
+-	LivenessProbe  means whether pod is live or not?? Live or not live
+-	Readinessprobe means whether your pod is ready or not??
+-	Startup probe means whether your pod is started or not..
+
+
+let us see the liveness probe throgh the example --
+
+It checks:
+  “Is the container alive or stuck?”
+
+If liveness probe fails → Kubernetes restarts the container.
+Real-world scenario:
+
+Application goes into deadlock
+Thread stuck
+Infinite loop
+Memory leak but still running
+
+example -- create one file liveness.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: liveness-http-demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+      - containerPort: 80
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      failureThreshold: 3
+
+How it works:
+  After 5 seconds → starts checking
+  Every 10 seconds → checks /
+  If fails 3 times → container restarted
+
+kubectl apply -f liveness.yaml
+kubectl describe pod liveness-http-demo
+
+Now break it manually:
+  kubectl exec -it liveness-http-demo -- rm -rf /usr/share/nginx/html/index.html
+
+  After some time → pod restarts.
+  kubectl get pods
+
+You will see restart count increase.
+
+
+
+Readiness Probe:
+  It checks:
+    “Is the application ready to accept traffic?”
+    If readiness fails:
+      Pod is removed from Service
+      But container is NOT restarted
+
+  📌 Real-world scenario:
+    App started but DB connection not ready
+    App warming up
+    Cache loading
+
+
+let us create the readiness.yml file
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: readiness-demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+      - containerPort: 80
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5
+
+kubectl apply -f pod.yml
+Delete nginx content:
+  kubectl exec -it readiness-demo -- rm -rf /usr/share/nginx/html/index.html
+
+  now see the pod status -- kubectl get pods
+  Pod will show:
+    READY 0/1
+    But:
+      RESTARTS 0
+
+
+3️⃣ Startup Probe:
+  Used for slow starting applications.
+  Without startup probe:
+    Liveness might restart app before it finishes startup.
+    Startup probe disables liveness/readiness until it succeeds.
+
+    📌 Real-world scenario:
+      Spring Boot app (takes 2–3 minutes to start)
+      Heavy Java apps
+      Database initialization apps
+
+      created file to see practically -- startup.yml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: startup-demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+      - containerPort: 80
+    startupProbe:
+      httpGet:
+        path: /
+        port: 80
+      failureThreshold: 30
+      periodSeconds: 10
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      periodSeconds: 10
+
+
+kubectl apply -f startup.yml
+How it works:
+  Startup probe checks first
+  If it fails → retry up to 30 times
+  Until it succeeds → liveness probe won’t start
+
+
+let us see the example in deployment file.
+
+create one deployment.yml file..
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-probe-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-probe
+  template:
+    metadata:
+      labels:
+        app: nginx-probe
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3
+
+
+  kubectl apply -f deployment.yml
+
+What happens here?
+3 replicas created
+Readiness runs first (after 5 sec)
+Liveness runs after 10 sec
+If liveness fails 3 times → container restarts
+If readiness fails → pod removed from service
+
+kubectl get pods
+kubectl describe pod <pod-name>
+
+now: remove index.html from the container/pod by --
+  - kubectl exec -it <pod-name> -- rm -rf /usr/share/nginx/html/index.html
+
+now check:
+  kubectl get pods
+
+You’ll see:
+  READY becomes 0/1 (readiness fail)
+  Restart count increases (liveness fail)
+
+
